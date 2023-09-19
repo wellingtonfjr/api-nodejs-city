@@ -23,6 +23,8 @@ export const validation: TValidation = (schemas) => async (req, res, next) => {
 			errorValidator[key] = errors;
 		}
 	});
-	if (errorValidator) return res.status(StatusCodes.BAD_REQUEST).json({ errors: errorValidator });
+	console.log('error', Object.keys(errorValidator));
+
+	if (Object.keys(errorValidator).length) return res.status(StatusCodes.BAD_REQUEST).json({ errors: errorValidator });
 	return next();
 };
