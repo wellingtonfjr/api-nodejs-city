@@ -2,35 +2,27 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import * as yup from 'yup';
 import { validation } from '../../shared/middleware/Validation';
+import { ICity } from '../../database/models';
+import { CitiesProvider } from '../../database/providers';
 
-interface IQuery {
-	filter: string,
-}
-
-const queryValidation: yup.Schema<IQuery> = yup.object().shape({
-	filter: yup.string().required()
-});
-
-interface ICity {
-  name: string
-	city: string
-}
-const bodyValidation: yup.Schema<ICity> = yup.object().shape({
-	name: yup.string().required().min(3),
-	city: yup.string().required().min(3)
+type IBodyProps = Omit<ICity, 'id'>
+const bodyValidation: yup.Schema<IBodyProps> = yup.object().shape({
+	name: yup.string().required().min(3).max(150),
 });
 
 export const createValidation = validation({
-	query: queryValidation,
 	body: bodyValidation,
 });
 
 export const create = async (req: Request<object, object, ICity>, res: Response) => {
-	console.log('req.body=>', req.query);
+	const result = await CitiesProvider.create(req.body);
 
-	res.status(StatusCodes.ACCEPTED).json({
-		city: {
-			...req.body
-		}
-	});
+	if (result instanceof Error) {
+		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			errors: {
+				default: result.message
+			}
+		});
+	}
+	return res.status(StatusCodes.ACCEPTED).json(result);
 };
